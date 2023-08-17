@@ -150,10 +150,10 @@ if __name__ == '__main__':
     # Command-line arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--label_dir', type=str, default='/home/greg/ml_lt_cxr/labels')
+    parser.add_argument('--label_dir', type=str, default='../labels')
 
     parser.add_argument('--dataset_name', type=str, default='nih', choices=['nih', 'mimic'])
-    parser.add_argument('--prune_dir', type=str, default='/ssd1/greg/022023_nih-cxr-lt_prune_preds', required=True)
+    parser.add_argument('--prune_dir', type=str, default='../nih-cxr-lt_L1-prune_preds')  # for MIMIC-CXR-LT, can use '../mimic-cxr-lt_L1-prune_preds'
     parser.add_argument('--prune_type', type=str, default='L1', choices=['random', 'L1'])
 
     parser.add_argument('--n_seeds', type=int, default=30)

@@ -114,10 +114,10 @@ def main(args):
 if __name__ == '__main__':
     # Command-line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_dir', default='/ssd1/greg/NIH_CXR/images', type=str)
-    parser.add_argument('--label_dir', default='labels/', type=str)
+    parser.add_argument('--data_dir', type=str, required=True, help="path to dataset (NIH ChestXRay14 or MIMIC-CXR-JPG) directory containing all images")
+    parser.add_argument('--label_dir', default='../labels', type=str)
     parser.add_argument('--out_dir', required=True, type=str, help='path to directory where results will be saved')
-    parser.add_argument('--model_dir', required=True, default='trained_models', type=str, help='path to directory with model weights')
+    parser.add_argument('--model_dir', required=True, default='../trained_models', type=str, help='path to directory with model weights')
     parser.add_argument('--dataset', default='nih-cxr-lt', type=str, choices=['nih-cxr-lt', 'mimic-cxr-lt'])
 
     parser.add_argument('--prune_type', type=str, default='L1', choices=['L1', 'random'])
