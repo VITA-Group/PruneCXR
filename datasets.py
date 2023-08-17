@@ -35,7 +35,7 @@ class NIH_CXR_Dataset(torch.utils.data.Dataset):
             'Pneumomediastinum'  # shared
         ]
 
-        self.label_df = pd.read_csv(os.path.join(label_dir, f'121722_nih-cxr-lt_labels_{split}.csv'))
+        self.label_df = pd.read_csv(os.path.join(label_dir, f'miccai2023_nih-cxr-lt_labels_{split}.csv'))
 
         self.img_paths = self.label_df['id'].apply(lambda x: os.path.join(data_dir, x)).values.tolist()
         self.labels = self.label_df[self.CLASSES].values
@@ -104,7 +104,7 @@ class MIMIC_CXR_Dataset(torch.utils.data.Dataset):
             'Pleural Other'
         ]
 
-        self.label_df = pd.read_csv(os.path.join(label_dir, f'121722_mimic-cxr-lt_labels_{split}.csv'))
+        self.label_df = pd.read_csv(os.path.join(label_dir, f'miccai2023_mimic-cxr-lt_labels_{split}.csv'))
 
         self.img_paths = self.label_df['path'].apply(lambda x: os.path.join(data_dir, x)).values.tolist()
         # self.img_paths = [f[:-4] + '_320.jpg' for f in self.img_paths]  # path to version of image pre-downsampled to 320x320

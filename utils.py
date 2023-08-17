@@ -303,7 +303,7 @@ def evaluate_minimal(model, device, loss_fxn, dataset, split, batch_size, model_
     f.write(summary)
     f.close()
 
-def evaluate_prune(model, device, dataset, split, batch_size, model_dir, n_TTA=0):
+def evaluate_prune(model, device, dataset, split, batch_size, n_TTA=0):
     model.eval()
 
     data_loader  = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True, worker_init_fn=val_worker_init_fn)

@@ -45,7 +45,7 @@ def main(args):
     val_dataset = dataset(data_dir=args.data_dir, label_dir=args.label_dir, split='val')
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=8, pin_memory=True, worker_init_fn=val_worker_init_fn)
 
-    res = evaluate_prune(model=model, device=device, dataset=val_dataset, split='val', batch_size=args.batch_size, model_dir='', n_TTA=0)
+    res = evaluate_prune(model=model, device=device, dataset=val_dataset, split='val', batch_size=args.batch_size, n_TTA=0)
     res.to_pickle(os.path.join(out_dir, f'{dataset_name}-cxr-lt_resnet50_seed-0_prune-0_val.pkl'))
 
     # Get predictions on test set at various sparsity ratios
@@ -65,7 +65,7 @@ def main(args):
         model = model.to(device)
 
         # Run inference on test set and save predictions
-        res = evaluate_prune(model=model, device=device, dataset=test_dataset, split='test', batch_size=args.batch_size, model_dir='', n_TTA=0)
+        res = evaluate_prune(model=model, device=device, dataset=test_dataset, split='test', batch_size=args.batch_size, n_TTA=0)
         res.to_pickle(os.path.join(out_dir, f'{dataset_name}-cxr-lt_resnet50_seed-{seed}_prune-0.pkl'))
 
         for ratio in tqdm.tqdm(sparsity_ratios[1:], desc='PRUNING RATIOS COMPLETED'):
@@ -108,7 +108,7 @@ def main(args):
                 sys.exit(-1)
 
             # Run inference on test set with pruned model and save predictions
-            res = evaluate_prune(model=model, device=device, dataset=test_dataset, split='test', batch_size=args.batch_size, model_dir='', n_TTA=0)
+            res = evaluate_prune(model=model, device=device, dataset=test_dataset, split='test', batch_size=args.batch_size, n_TTA=0)
             res.to_pickle(os.path.join(out_dir, f'{dataset_name}-cxr-lt_resnet50_seed-{seed}_prune-{ratio}.pkl'))
 
 if __name__ == '__main__':
@@ -117,7 +117,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', default='/ssd1/greg/NIH_CXR/images', type=str)
     parser.add_argument('--label_dir', default='labels/', type=str)
     parser.add_argument('--out_dir', required=True, type=str, help='path to directory where results will be saved')
-    parser.add_argument('--model_dir', required=True, type=str, help='path to directory with model weights')
+    parser.add_argument('--model_dir', required=True, default='trained_models', type=str, help='path to directory with model weights')
     parser.add_argument('--dataset', default='nih-cxr-lt', type=str, choices=['nih-cxr-lt', 'mimic-cxr-lt'])
 
     parser.add_argument('--prune_type', type=str, default='L1', choices=['L1', 'random'])

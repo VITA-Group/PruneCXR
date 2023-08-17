@@ -624,11 +624,11 @@ if __name__ == '__main__':
 
     parser.add_argument('--label_dir', type=str, default='labels')
 
-    parser.add_argument('--nih_model_dir', type=str, default='')  # ex: 'trained_models/nih-cxr-lt_resnet50_ce_lr-0.0001_bs-256'
+    parser.add_argument('--nih_model_dir', type=str, default='trained_models/nih-cxr-lt_resnet50_ce_lr-0.0001_bs-256')
     parser.add_argument('--nih_l1_prune_dir', type=str, default='nih-cxr-lt_L1-prune_preds', required=True)
     parser.add_argument('--nih_rand_prune_dir', type=str, default='')  # ex: 'nih-cxr-lt_rand-prune_preds'
 
-    parser.add_argument('--mimic_model_dir', type=str, default='')  # ex: 'trained_models/mimic-cxr-lt_resnet50_ce_lr-0.0001_bs-256'
+    parser.add_argument('--mimic_model_dir', type=str, default='trained_models/mimic-cxr-lt_resnet50_ce_lr-0.0001_bs-256')
     parser.add_argument('--mimic_l1_prune_dir', type=str, default='mimic-cxr-lt_L1-prune_preds', required=True)
     parser.add_argument('--mimic_rand_prune_dir', type=str, default='')  # ex: 'mimic-cxr-lt_rand-prune_preds'
 
