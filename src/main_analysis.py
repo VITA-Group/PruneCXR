@@ -1,7 +1,7 @@
 import os
-import shutil
 from itertools import combinations
 
+import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -9,8 +9,7 @@ import seaborn as sns
 import torchvision
 import torch
 import tqdm
-from scipy.spatial.distance import pdist, cosine, euclidean, correlation
-from scipy.stats import spearmanr, ttest_ind
+from scipy.spatial.distance import euclidean
 from sklearn.metrics import roc_auc_score, average_precision_score, precision_recall_fscore_support
 
 def evaluate(y_true, y_hat, classes):
@@ -69,6 +68,9 @@ def main(args):
         'Pleural Other'
     ]
 
+    nih_prune_types = ['L1', 'Random'] if args.nih_rand_prune_dir != '' else ['L1']
+    mimic_prune_types = ['L1', 'Random'] if args.mimic_rand_prune_dir != '' else ['L1']
+
     ### OVERALL ANALYSIS OF THE EFFECT OF PRUNING ###
 
     # Set sparsity ratios [0, 0.05, ..., 0.9, 0.95]
@@ -77,9 +79,9 @@ def main(args):
     # Read in NIH test set ground truth
     nih_y_test = pd.read_csv(os.path.join(args.nih_model_dir, 'test_true.csv'))
 
-    # Read in all NIH predictions (stratified by random seed + pruning ratio) + perform evaluation
+    # Read in all NIH predictions (stratified by random seed + sparsity ratio) + perform evaluation
     nih_pred_dict = {}
-    for seed in tqdm.tqdm(range(args.n_seeds), desc='Reading in pruning predictions'):
+    for seed in tqdm.tqdm(range(args.n_seeds), desc='Reading in NIH-CXR-LT pruning predictions'):
         for ratio in sparsity_ratios:
             if ratio == 0:
                 y_hat = pd.read_pickle(os.path.join(args.nih_l1_prune_dir, f'nih-cxr-lt_resnet50_seed-{seed}_prune-{int(ratio)}.pkl'))
@@ -98,12 +100,32 @@ def main(args):
                 res = evaluate(nih_y_test, y_hat, NIH_CLASSES)
                 nih_pred_dict[str(seed), str(int(ratio*100)), 'Random'] = res
 
+    # Gather overall NIH results by random seed + sparsity ratio into DataFrame
+    seeds = []
+    ratios = []
+    mAUCs = []
+    mAPs = []
+    mF1s = []
+    prunes = []
+    for seed in range(args.n_seeds):
+        for ratio in sparsity_ratios:
+            for prune in nih_prune_types:
+                metrics = nih_pred_dict[str(seed), str(int(ratio*100)), prune]
+
+                seeds.append(seed)
+                ratios.append(ratio)
+                mAUCs.append(metrics['aucs'].mean())
+                mAPs.append(metrics['aps'].mean())
+                mF1s.append(metrics['f1s'].mean())
+                prunes.append(prune)
+    nih_overall_metrics = pd.DataFrame({'seed': seeds, 'ratio': ratios, 'mAUC': mAUCs, 'mAP': mAPs, 'mF1': mF1s, 'prune': prunes})
+
     # Read in MIMIC test set ground truth
     mimic_y_test = pd.read_csv(os.path.join(args.mimic_model_dir, 'test_true.csv'))
 
-    # Read in all MIMIC predictions (stratified by random seed + pruning ratio) + perform evaluation
+    # Read in all MIMIC predictions (stratified by random seed + sparsity ratio) + perform evaluation
     mimic_pred_dict = {}
-    for seed in tqdm.tqdm(range(args.n_seeds), desc='Reading in pruning predictions'):
+    for seed in tqdm.tqdm(range(args.n_seeds), desc='Reading in MIMIC-CXR-LT pruning predictions'):
         for ratio in sparsity_ratios:
             if ratio == 0:
                 y_hat = pd.read_pickle(os.path.join(args.mimic_l1_prune_dir, f'mimic-cxr-lt_resnet50_seed-{seed}_prune-{int(ratio)}.pkl'))
@@ -122,6 +144,26 @@ def main(args):
                 res = evaluate(mimic_y_test, y_hat, MIMIC_CLASSES)
                 mimic_pred_dict[str(seed), str(int(ratio*100)), 'Random'] = res
 
+    # Gather overall MIMIC results by random seed + sparsity ratio into DataFrame
+    seeds = []
+    ratios = []
+    mAUCs = []
+    mAPs = []
+    mF1s = []
+    prunes = []
+    for seed in range(args.n_seeds):
+        for ratio in sparsity_ratios:
+            for prune in mimic_prune_types:
+                metrics = mimic_pred_dict[str(seed), str(int(ratio*100)), prune]
+
+                seeds.append(seed)
+                ratios.append(ratio)
+                mAUCs.append(metrics['aucs'].mean())
+                mAPs.append(metrics['aps'].mean())
+                mF1s.append(metrics['f1s'].mean())
+                prunes.append(prune)
+    mimic_overall_metrics = pd.DataFrame({'seed': seeds, 'ratio': ratios, 'mAUC': mAUCs, 'mAP': mAPs, 'mF1': mF1s, 'prune': prunes})
+
     # Create data frame of overall metrics by dataset, seed, and sparsity ratio
     overall_metrics = pd.concat([nih_overall_metrics, mimic_overall_metrics], axis=0)
     overall_metrics['dataset'] = ['NIH-CXR-LT'] * nih_overall_metrics.shape[0] + ['MIMIC-CXR-LT'] * mimic_overall_metrics.shape[0]
@@ -135,7 +177,7 @@ def main(args):
     ax.set_ylim([0.05, 0.375])
     ax.legend(title='', fontsize=11)
     fig.tight_layout()
-    fig.savefig('overall_prune.pdf', bbox_inches='tight')
+    fig.savefig(os.path.join(args.out_dir, 'overall_prune.pdf'), bbox_inches='tight')
 
     ### (END) OVERALL ANALYSIS OF THE EFFECT OF PRUNING ###
 
@@ -149,7 +191,6 @@ def main(args):
     f1s = []
     labels = []
     prunes = []
-    nih_prune_types = ['L1', 'Random'] if args.nih_rand_prune_dir != '' else ['L1']
     for seed in range(args.n_seeds):
         for ratio in sparsity_ratios:
             for prune in nih_prune_types:
@@ -184,7 +225,6 @@ def main(args):
     f1s = []
     labels = []
     prunes = []
-    mimic_prune_types = ['L1', 'Random'] if args.mimic_rand_prune_dir != '' else ['L1']
     for seed in range(args.n_seeds):
         for ratio in sparsity_ratios:
             for prune in mimic_prune_types:
@@ -237,17 +277,17 @@ def main(args):
     ax[1].set_xlim([0.25, 0.975])
 
     fig.tight_layout()
-    fig.savefig('forgettability_curves_subset.pdf', bbox_inches='tight')
+    fig.savefig(os.path.join(args.out_dir, 'forgettability_curves_subset.pdf'), bbox_inches='tight')
 
     ### (END) CLASS-LEVEL ANALYSIS OF THE EFFECT OF PRUNING ###
 
     ### RELATIONSHIP BETWEEN CLASS FREQUENCY AND "FORGETTABILITY"/IMPACT OF PRUNING ###
 
     # Load NIH test labels
-    nih_y_test = pd.read_csv(os.path.join(args.label_dir, f'121722_nih-cxr-lt_labels_test.csv'))
+    nih_y_test = pd.read_csv(os.path.join(args.label_dir, f'miccai2023_nih-cxr-lt_labels_test.csv'))
     nih_label_df = pd.DataFrame(nih_y_test[NIH_CLASSES].sum(0).astype(int), columns=['test_freq'])
 
-    nih_y_train = pd.read_csv(os.path.join(args.label_dir, f'121722_nih-cxr-lt_labels_train.csv'))
+    nih_y_train = pd.read_csv(os.path.join(args.label_dir, f'miccai2023_nih-cxr-lt_labels_train.csv'))
 
     nih_label_df['train_freq'] = nih_y_train[NIH_CLASSES].sum(0)
 
@@ -285,10 +325,10 @@ def main(args):
     nih_extreme_delta_df_L1['log_train_freq'] = np.log(nih_extreme_delta_df_L1['train_freq'])
 
     # Load MIMIC test data
-    mimic_y_test = pd.read_csv(os.path.join(args.label_dir, f'121722_mimic-cxr-lt_labels_test.csv'))
+    mimic_y_test = pd.read_csv(os.path.join(args.label_dir, f'miccai2023_mimic-cxr-lt_labels_test.csv'))
     mimic_label_df = pd.DataFrame(mimic_y_test[MIMIC_CLASSES].sum(0).astype(int), columns=['test_freq'])
 
-    mimic_y_train = pd.read_csv(os.path.join(args.label_dir, f'121722_mimic-cxr-lt_labels_train.csv'))
+    mimic_y_train = pd.read_csv(os.path.join(args.label_dir, f'miccai2023_mimic-cxr-lt_labels_train.csv'))
 
     mimic_label_df['train_freq'] = mimic_y_train[MIMIC_CLASSES].sum(0)
 
@@ -325,7 +365,6 @@ def main(args):
     # For MIMIC, extract subset of relative performance changes at 95% sparsity under L1 pruning
     mimic_extreme_delta_df_L1 = mimic_delta_df[(mimic_delta_df['ratio'] == 0.95) & (mimic_delta_df['prune'] == 'L1')]
     mimic_extreme_delta_df_L1['log_train_freq'] = np.log(mimic_extreme_delta_df_L1['train_freq'])
-    mimic_extreme_delta_df_L1.sort_values('ap')
 
     # Plot association between class frequency (log-transformed) and first sparsity ratio with a 20% drop in AP for each class and dataset
     fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(8, 5))
@@ -385,7 +424,7 @@ def main(args):
     ax[1,1].set_title('MIMIC-CXR-LT', fontsize=14)
 
     fig.tight_layout()
-    fig.savefig('class_prune_correlations.pdf', bbox_inches='tight')
+    fig.savefig(os.path.join(args.out_dir, 'class_prune_correlations.pdf'), bbox_inches='tight')
 
     ### (END) RELATIONSHIP BETWEEN CLASS FREQUENCY AND "FORGETTABILITY"/IMPACT OF PRUNING ###
 
@@ -484,7 +523,7 @@ def main(args):
     fig.subplots_adjust(bottom=0.26)
     fig.legend(handles, labels, fontsize=9, loc='lower center', ncol=3)
 
-    fig.savefig('nih_mutual_curve_corr.pdf', bbox_inches='tight')
+    fig.savefig(os.path.join(args.out_dir, 'nih_mutual_curve_corr.pdf'), bbox_inches='tight')
 
     # For MIMIC, get vector of median (across 30 runs) relative changes in AP at each sparsity ratio for L1 pruning ["forgettability curve"]
     mimic_rel_delta_ap_vector_dict = {}
@@ -561,7 +600,7 @@ def main(args):
     ax[1].text(0.27, 1.5, r'$r=$-$0.28, \rho=$-$0.30$' + '\n' + r'             (P<0.001)', fontsize=12)
     fig.tight_layout()
 
-    fig.savefig('mimic_mutual_curve_corr.pdf', bbox_inches='tight')
+    fig.savefig(os.path.join(args.out_dir, 'mimic_mutual_curve_corr.pdf'), bbox_inches='tight')
 
     ### (END) RELATIONSHIP BETWEEN CLASS CO-OCCURRENCE AND IMPACT OF PRUNING ON CLASS PERFORMANCE ###
 
@@ -573,8 +612,7 @@ def main(args):
         model.fc = torch.nn.Linear(model.fc.in_features, 20)
 
         weights = torch.load(os.path.join(args.nih_model_dir, 'chkpt.pt'))['weights']
-        msg = model.load_state_dict(weights, strict=True)
-        print(msg)
+        model.load_state_dict(weights, strict=True)
 
         # Collect weight magnitudes throughout NIH-trained network
         abs_weights_nih = []
@@ -588,8 +626,7 @@ def main(args):
         model.fc = torch.nn.Linear(model.fc.in_features, 19)
 
         weights = torch.load(os.path.join(args.mimic_model_dir, 'chkpt.pt'))['weights']
-        msg = model.load_state_dict(weights, strict=True)
-        print(msg)
+        model.load_state_dict(weights, strict=True)
 
         # Collect weight magnitudes throughout MIMIC-trained network
         abs_weights_mimic = []
@@ -614,7 +651,7 @@ def main(args):
         ax[1].set_title('MIMIC-CXR-LT', fontsize=14)
 
         fig.tight_layout()
-        fig.savefig('weight_magnitudes.pdf', bbox_inches='tight')
+        fig.savefig(os.path.join(args.out_dir, 'weight_magnitudes.pdf'), bbox_inches='tight')
 
     ### (END) DISTRIBUTION OF WEIGHT MAGNITUDES IN NIH- AND MIMIC-TRAINED MODELS ###
 
@@ -622,14 +659,15 @@ if __name__ == '__main__':
     # Command-line arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--label_dir', type=str, default='../labels')
+    parser.add_argument('--label_dir', type=str, default='labels')
+    parser.add_argument('--out_dir', type=str, default='figs')
 
-    parser.add_argument('--nih_model_dir', type=str, default='../trained_models/nih-cxr-lt_resnet50_ce_lr-0.0001_bs-256')
-    parser.add_argument('--nih_l1_prune_dir', type=str, default='../nih-cxr-lt_L1-prune_preds')
+    parser.add_argument('--nih_model_dir', type=str, default='trained_models/nih-cxr-lt_resnet50_ce_lr-0.0001_bs-256')
+    parser.add_argument('--nih_l1_prune_dir', type=str, default='nih-cxr-lt_L1-prune_preds')
     parser.add_argument('--nih_rand_prune_dir', type=str, default='')  # ex: 'nih-cxr-lt_rand-prune_preds'
 
-    parser.add_argument('--mimic_model_dir', type=str, default='../trained_models/mimic-cxr-lt_resnet50_ce_lr-0.0001_bs-256')
-    parser.add_argument('--mimic_l1_prune_dir', type=str, default='../mimic-cxr-lt_L1-prune_preds')
+    parser.add_argument('--mimic_model_dir', type=str, default='trained_models/mimic-cxr-lt_resnet50_ce_lr-0.0001_bs-256')
+    parser.add_argument('--mimic_l1_prune_dir', type=str, default='mimic-cxr-lt_L1-prune_preds')
     parser.add_argument('--mimic_rand_prune_dir', type=str, default='')  # ex: 'mimic-cxr-lt_rand-prune_preds'
 
     parser.add_argument('--n_seeds', type=int, default=30)

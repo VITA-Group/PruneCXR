@@ -43,19 +43,27 @@ class NIH_CXR_Dataset(torch.utils.data.Dataset):
         self.cls_num_list = self.label_df[self.CLASSES].sum(0).values.tolist()
 
         if self.split == 'train':
-            transform_list = [
+            self.transform = torchvision.transforms.Compose([
                 torchvision.transforms.ToPILImage(),
                 torchvision.transforms.RandomHorizontalFlip(),
                 torchvision.transforms.RandomRotation(15),
                 torchvision.transforms.ToTensor(),
-                torchvision.transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
-            ]
+                torchvision.transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225) )
+            ])
         else:
-            transform_list = [
+            self.transform = torchvision.transforms.Compose([
                 torchvision.transforms.ToPILImage(),
                 torchvision.transforms.ToTensor(),
-                torchvision.transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
-            ]
+                torchvision.transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225) )
+            ])
+
+        self.tta_transform = torchvision.transforms.Compose([
+                torchvision.transforms.ToPILImage(),
+                torchvision.transforms.RandomHorizontalFlip(),
+                torchvision.transforms.RandomRotation(15),
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225) )
+            ])
 
     def __len__(self):
         return len(self.img_paths)
@@ -111,7 +119,6 @@ class MIMIC_CXR_Dataset(torch.utils.data.Dataset):
         self.labels = self.label_df[self.CLASSES].values
 
         self.cls_num_list = self.label_df[self.CLASSES].sum(0).values.tolist()
-
 
         if self.split == 'train':
             self.transform = torchvision.transforms.Compose([

@@ -7,8 +7,6 @@ import numpy as np
 import pandas as pd
 import tqdm
 import torch
-import torchvision
-import torch.nn.functional as F
 from sklearn.metrics import roc_auc_score, precision_recall_fscore_support, average_precision_score
 
 def set_seed(seed):
