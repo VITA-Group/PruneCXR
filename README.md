@@ -2,7 +2,7 @@
 
 [**Gregory Holste**](https://gholste.me), Ziyu Jiang, Ajay Jaiswal, Maria Hanna, Shlomo Minkowitz, Alan C. Legasto, Joanna G. Escalon, Sharon Steinberger, Mark Bittman, Thomas C. Shen, Ying Ding, Ronald M. Summers, George Shih, Yifan Peng, and Zhangyang Wang
 
-Early accepted (*top 14%*) to [MICCAI 2023](https://conferences.miccai.org/2023/en/)
+[**[arXiv]**](https://arxiv.org/abs/2308.09180) | Early accepted (*top 14%*) to [MICCAI 2023](https://conferences.miccai.org/2023/en/)
 
 ### NOTE: This repository is a work in progress! ###
 
