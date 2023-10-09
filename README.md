@@ -18,7 +18,13 @@ Pruning has emerged as a powerful technique for compressing deep neural networks
 
 # Dataset Access
 
-## COMING SOON ##
+- **NIH-CXR-LT**:
+    - <ins>Images</ins>: https://nihcc.app.box.com/v/ChestXray-NIHCC
+    - <ins>Labels</ins>: https://nihcc.app.box.com/v/ChestXray-NIHCC/folder/223604149466
+- **MIMIC-CXR-LT** (requires credentialing through [PhysioNet](https://physionet.org/)):
+    - <ins>Images</ins>: https://physionet.org/content/mimic-cxr-jpg/2.0.0/
+    - <ins>Labels</ins>: https://physionet.org/content/cxr-lt-iccv-workshop-cvamd/1.1.0/
+
 
 # Trained Models
 
@@ -30,13 +36,12 @@ All test set predictions for each pruned model (used to generate all main figure
 
 To reproduce the results in the paper:
 
-1. Register to download the MIMIC-CXR-JPG dataset from https://physionet.org/content/mimic-cxr-jpg/2.0.0/, and download the NIH ChestXRay14 dataset from https://nihcc.app.box.com/v/ChestXray-NIHCC/.
-2. Download NIH-CXR-LT labels from **COMING SOON** and MIMIC-CXR-LT labels from **COMING SOON**. Place all 6 files in the `labels` directory of this repo.
-3. Install prerequisite packages with Anaconda: `conda env create -f torch.yml` and `conda activate torch`.
-4. (Optional) From https://utexas.box.com/s/eenr2gumfjaazngvnwerhmo9c0qru23w, download the `trained_models` directory and place it in this repo's base directory. The script to train these models can be found in `src/run_experiments.sh`. 
-5. From https://utexas.box.com/s/eenr2gumfjaazngvnwerhmo9c0qru23w, download `nih-cxr-lt_L1-prune_preds` and `mimic-cxr-lt_L1-prune_preds` and place both directories in this repo's base directory. The script to perform L1 pruning and inference on all models trained in the previous step can be found in `src/prune.py`.
-6. Generate the content of Figures 1-4 by running `python src/main_analysis.py`.
-7. Generate the content of Figure 5 by running `python src/pie_analysis.py`.
+1. See [Dataset Access](#dataset-access) to download NIH ChestXRay14 images with NIH-CXR-LT labels and MIMIC-CXR-JPG v2.0.0 images with MIMIC-CXR-LT labels. Place all 6 files in the `labels` directory of this repo.
+2. Install prerequisite packages with Anaconda: `conda env create -f torch.yml` and `conda activate torch`.
+3. (Optional) From https://utexas.box.com/s/eenr2gumfjaazngvnwerhmo9c0qru23w, download the `trained_models` directory and place it in this repo's base directory. The script to train these models can be found in `src/run_experiments.sh`. 
+4. From https://utexas.box.com/s/eenr2gumfjaazngvnwerhmo9c0qru23w, download `nih-cxr-lt_L1-prune_preds` and `mimic-cxr-lt_L1-prune_preds` and place both directories in this repo's base directory. The script to perform L1 pruning and inference on all models trained in the previous step can be found in `src/prune.py`.
+5. Generate the content of Figures 1-4 by running `python src/main_analysis.py`.
+6. Generate the content of Figure 5 by running `python src/pie_analysis.py`.
 
 While the raw data from the radiologist reader study described in Section 2.3 is not publicly available, the code to generate Figure 6, which summarizes radiologist perception of PIEs, can be found in `src/pie_survey_analysis.py`. 
 
